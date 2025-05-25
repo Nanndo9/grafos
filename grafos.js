@@ -310,7 +310,13 @@ class Grafo {
         const naArvore = new Array(this.numVertices).fill(false);
         const pai = new Array(this.numVertices).fill(-1);
 
-        chave[0] = 0; 
+
+        const verticeInicialPrim = 1; // Escolha um vértice inicial válido do seu grafo (ex: 1)
+        if (verticeInicialPrim < 0 || verticeInicialPrim >= this.numVertices) {
+        console.error("Vértice inicial inválido para Prim.");
+        return;
+    }
+    chave[verticeInicialPrim] = 0;
 
         for (let i = 0; i < this.numVertices - 1; i++) { 
             let u = -1;
