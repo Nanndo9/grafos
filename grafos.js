@@ -1,112 +1,149 @@
-/**
- * Represents an element in the adjacency list.
- * Each element contains an adjacent vertex, the weight of the edge,
- * and a reference to the next element in the list.
- */
+
 class ElemLista {
     constructor(verticeAdjacente, peso) {
-        this.verticeAdjacente = verticeAdjacente; // Number of the adjacent vertex
-        this.peso = peso;                         // Weight of the edge connecting to the vertex
-        this.proximo = null;                      // Reference to the next element in the list
+        this.verticeAdjacente = verticeAdjacente; // Vértice de destino da aresta
+        this.peso = peso;                         // Peso da aresta que conecta ao vértice
+        this.proximo = null;                      // Referência ao próximo elemento na lista encadeada
     }
 }
 
 /**
- * Represents an edge in the graph.
- * Contains source vertex, destination vertex, and the weight of the edge.
+ * Classe Aresta
+ * Representa uma aresta no grafo.
+ * Contém vértice de origem, vértice de destino e o peso da aresta.
+ * Usada principalmente para operações que manipulam diretamente arestas,
+ * como algoritmos de árvore geradora mínima (Kruskal, Prim, Apaga Reverso).
  */
 class Aresta {
     constructor(verticeOrigem, verticeDestino, peso) {
-        this.verticeOrigem = verticeOrigem;     // Vertex from where the edge starts
-        this.verticeDestino = verticeDestino;   // Vertex where the edge ends
-        this.peso = peso;                       // Weight of the edge
+        this.verticeOrigem = verticeOrigem;     // Vértice de onde a aresta começa
+        this.verticeDestino = verticeDestino;   // Vértice onde a aresta termina
+        this.peso = peso;                       // Peso da aresta
     }
-
-    // For sorting, we'll use a compare function directly with Array.sort()
-    // instead of operator overloading.
+    // Para ordenação, usamos uma função de comparação diretamente com Array.sort()
 }
 
 /**
- * Implementation of the Union-Find (Disjoint Set) structure.
- * Used in Kruskal's algorithm for cycle detection.
- * Implements path compression and union by rank (height).
+ * Classe DisjointSet (Union-Find)
+ * Implementação da estrutura Union-Find (Conjuntos Disjuntos).
+ * Usada no algoritmo de Kruskal para detecção de ciclos.
+ * Implementa compressão de caminho e união por altura (rank).
+ * 
+ * Complexidade:
+ * - Quase constante amortizada para operações find e union
+ * - Inicialização: O(n) onde n é o número de elementos
  */
 class DisjointSet {
     constructor(numElementos) {
-        this.ancestral = new Array(numElementos);
-        this.altura = new Array(numElementos).fill(0);
+        this.ancestral = new Array(numElementos); // Array para armazenar o ancestral de cada elemento
+        this.altura = new Array(numElementos).fill(0); // Array para armazenar a altura de cada árvore
+
+        // Inicialmente, cada elemento é seu próprio ancestral (conjuntos separados)
         for (let indice = 0; indice < numElementos; indice++) {
-            this.ancestral[indice] = indice; // Each element is initially its own ancestor
+            this.ancestral[indice] = indice;
         }
     }
 
     /**
-     * Finds the representative (root) of the set containing the element.
-     * Uses path compression for optimization.
+     * Encontra o representante (raiz) do conjunto que contém o elemento.
+     * Usa compressão de caminho para otimização.
+     * 
+     * Complexidade: O(α(n)) - onde α é a função inversa de Ackermann, praticamente constante
+     * 
+     * @param {number} elemento - O elemento para encontrar seu representante
+     * @returns {number} O representante do conjunto
      */
     encontrarRepresentante(elemento) {
         if (this.ancestral[elemento] !== elemento) {
-            this.ancestral[elemento] = this.encontrarRepresentante(this.ancestral[elemento]); // Path compression
+            // Compressão de caminho: atualiza ancestral para apontar diretamente para a raiz
+            this.ancestral[elemento] = this.encontrarRepresentante(this.ancestral[elemento]);
         }
         return this.ancestral[elemento];
     }
 
     /**
-     * Unites the sets containing elements A and B.
-     * Uses union by rank to keep the tree balanced.
+     * Une os conjuntos que contêm os elementos A e B.
+     * Usa união por altura para manter a árvore balanceada.
+     * 
+     * Complexidade: O(α(n)) - praticamente constante
+     * 
+     * @param {number} elementoA - Primeiro elemento
+     * @param {number} elementoB - Segundo elemento
      */
     unirConjuntos(elementoA, elementoB) {
         let raizA = this.encontrarRepresentante(elementoA);
         let raizB = this.encontrarRepresentante(elementoB);
 
-        if (raizA === raizB) return; // Already in the same set
+        if (raizA === raizB) return; // Já estão no mesmo conjunto
 
-        // Union by rank - the tree with smaller rank becomes a subtree of the one with larger rank
+        // União por altura - a árvore com menor altura se torna uma subárvore da outra
         if (this.altura[raizA] < this.altura[raizB]) {
             this.ancestral[raizA] = raizB;
         } else {
             this.ancestral[raizB] = raizA;
+            // Se ambas têm a mesma altura, incrementa a altura da resultante
             if (this.altura[raizA] === this.altura[raizB]) {
-                this.altura[raizA]++; // Increment rank if both have the same rank
+                this.altura[raizA]++;
             }
         }
     }
 }
 
 /**
- * Main class implementing a graph using adjacency lists.
- * Supports directed/undirected and weighted/unweighted graphs.
- * Contains implementations of various classic graph algorithms.
+ * Classe Grafo
+ * Implementação principal de um grafo usando listas de adjacência.
+ * Suporta grafos direcionados/não direcionados e ponderados/não ponderados.
+ * Contém implementações de vários algoritmos clássicos de grafos.
  */
 class Grafo {
+    /**
+     * Construtor da classe Grafo
+     * 
+     * @param {number} vertices - Número de vértices no grafo
+     * @param {boolean} direcionado - Se o grafo é direcionado (true) ou não (false)
+     * @param {boolean} ponderado - Se o grafo é ponderado (true) ou não (false)
+     */
     constructor(vertices, direcionado = false, ponderado = true) {
-        this.numVertices = vertices;
-        this.numArestas = 0;
-        this.direcionado = direcionado;
-        this.ponderado = ponderado;
+        this.numVertices = vertices;          // Número total de vértices
+        this.numArestas = 0;                  // Número total de arestas
+        this.direcionado = direcionado;       // Flag para grafo direcionado
+        this.ponderado = ponderado;           // Flag para grafo ponderado
 
-        // Initialize adjacency list
+        // Inicializa a lista de adjacência
         this.listaAdjacencia = new Array(vertices);
         for (let i = 0; i < vertices; i++) {
             this.listaAdjacencia[i] = null;
         }
-        this.INFINITO = 999999; // Represents infinity for distances
+        this.INFINITO = 999999; // Representa infinito para distâncias
     }
 
-
+    /**
+     * Método auxiliar para inserir uma aresta na lista de adjacência.
+     * Mantém a lista ordenada por vértice adjacente.
+     * 
+     * Complexidade: O(grau do vértice) no pior caso
+     * 
+     * @param {number} verticeOrigem - Vértice de origem
+     * @param {number} verticeDestino - Vértice de destino
+     * @param {number} peso - Peso da aresta
+     * @returns {boolean} true se a aresta foi inserida, false se já existia
+     */
     insereArestaAux(verticeOrigem, verticeDestino, peso) {
         let anterior = null;
         let corrente = this.listaAdjacencia[verticeOrigem];
 
+        // Encontra a posição correta para inserir a aresta mantendo a ordenação
         while (corrente !== null && corrente.verticeAdjacente < verticeDestino) {
             anterior = corrente;
             corrente = corrente.proximo;
         }
 
+        // Verifica se a aresta já existe
         if (corrente !== null && corrente.verticeAdjacente === verticeDestino) {
             return false;
         }
 
+        // Cria um novo elemento e o insere na lista
         const novoElemento = new ElemLista(verticeDestino, peso);
         novoElemento.proximo = corrente;
 
@@ -117,7 +154,17 @@ class Grafo {
         }
         return true;
     }
+
+    /**
+     * Adiciona uma aresta ao grafo.
+     * Se o grafo não for direcionado, adiciona também a aresta reversa.
+     * 
+     * @param {number} verticeOrigem - Vértice de origem
+     * @param {number} verticeDestino - Vértice de destino
+     * @param {number} peso - Peso da aresta (padrão é 1 para grafos não ponderados)
+     */
     adicionaAresta(verticeOrigem, verticeDestino, peso) {
+        // Validação dos vértices
         if (verticeOrigem < 0 || verticeDestino < 0 ||
             verticeOrigem >= this.numVertices || verticeDestino >= this.numVertices ||
             verticeOrigem === verticeDestino) {
@@ -127,15 +174,26 @@ class Grafo {
 
         const pesoReal = this.ponderado ? peso : 1;
 
+        // Insere a aresta e, se bem-sucedido, incrementa o contador
         if (this.insereArestaAux(verticeOrigem, verticeDestino, pesoReal)) {
             if (!this.direcionado) {
-                this.insereArestaAux(verticeDestino, verticeOrigem, pesoReal); // Add reverse edge
+                // Para grafos não direcionados, adiciona a aresta reversa
+                this.insereArestaAux(verticeDestino, verticeOrigem, pesoReal);
             }
             this.numArestas++;
         }
     }
 
+    /**
+     * Adiciona uma aresta direcionada ao grafo, independentemente da configuração.
+     * Útil para criar grafos mistos ou para testes específicos.
+     * 
+     * @param {number} verticeOrigem - Vértice de origem
+     * @param {number} verticeDestino - Vértice de destino
+     * @param {number} peso - Peso da aresta
+     */
     adicionaArestaDirecionada(verticeOrigem, verticeDestino, peso) {
+        // Validação dos vértices
         if (verticeOrigem < 0 || verticeDestino < 0 ||
             verticeOrigem >= this.numVertices || verticeDestino >= this.numVertices ||
             verticeOrigem === verticeDestino) {
@@ -145,35 +203,48 @@ class Grafo {
 
         const pesoReal = this.ponderado ? peso : 1;
 
+        // Insere a aresta direcionada
         if (this.insereArestaAux(verticeOrigem, verticeDestino, pesoReal)) {
             this.numArestas++;
         }
     }
 
+    /**
+     * Implementação do algoritmo de Busca em Largura (BFS) para encontrar caminhos mais curtos.
+     * Ideal para grafos não ponderados, onde cada aresta tem peso unitário.
+     * 
+     * Complexidade: O(V + E) onde V é o número de vértices e E é o número de arestas
+     * 
+     * @param {number} verticeInicial - Vértice de início da busca
+     */
     algoritmoBFS(verticeInicial) {
         const distancias = new Array(this.numVertices).fill(this.INFINITO);
         const visitado = new Array(this.numVertices).fill(false);
         const fila = [];
 
+        // Inicializa o vértice inicial
         distancias[verticeInicial] = 0;
         visitado[verticeInicial] = true;
         fila.push(verticeInicial);
 
+        // Processo de BFS
         while (fila.length > 0) {
-            const u = fila.shift();
+            const u = fila.shift(); // Remove o primeiro elemento da fila
 
+            // Visita todos os vizinhos do vértice atual
             let vizinho = this.listaAdjacencia[u];
             while (vizinho !== null) {
                 const w = vizinho.verticeAdjacente;
                 if (!visitado[w]) {
                     visitado[w] = true;
-                    distancias[w] = distancias[u] + 1;
+                    distancias[w] = distancias[u] + 1; // Incrementa a distância
                     fila.push(w);
                 }
                 vizinho = vizinho.proximo;
             }
         }
 
+        // Exibe os resultados
         console.log(`\nDistancias a partir do vertice ${verticeInicial} (usando BFS):`);
         for (let i = 1; i < this.numVertices; i++) {
             if (distancias[i] === this.INFINITO)
@@ -183,16 +254,29 @@ class Grafo {
         }
     }
 
+    /**
+     * Implementação do algoritmo de Dijkstra para encontrar caminhos mais curtos.
+     * Funciona para grafos ponderados com pesos não-negativos.
+     * 
+     * Complexidade: O(V²) nesta implementação simples
+     * Com fila de prioridade, seria O((V+E)logV)
+     * 
+     * @param {number} verticeInicial - Vértice de início da busca
+     */
     algoritmoDijkstra(verticeInicial) {
         const distancias = new Array(this.numVertices).fill(this.INFINITO);
         const visitado = new Array(this.numVertices).fill(false);
 
+        // Inicializa a distância do vértice inicial como 0
         distancias[verticeInicial] = 0;
 
+        // Para cada vértice, encontramos o vértice não visitado com menor distância
+        // e atualizamos as distâncias de seus vizinhos
         for (let contador = 0; contador < this.numVertices - 1; contador++) {
             let verticeAtual = -1;
             let menorDistancia = this.INFINITO;
 
+            // Encontra o vértice não visitado com menor distância atual
             for (let indiceVertice = 0; indiceVertice < this.numVertices; indiceVertice++) {
                 if (!visitado[indiceVertice] && distancias[indiceVertice] < menorDistancia) {
                     menorDistancia = distancias[indiceVertice];
@@ -200,19 +284,22 @@ class Grafo {
                 }
             }
 
+            // Se não encontrarmos um vértice alcançável, paramos
             if (verticeAtual === -1) {
-                break; 
+                break;
             }
 
             visitado[verticeAtual] = true;
 
+            // Atualiza as distâncias dos vizinhos do vértice atual
             let vizinho = this.listaAdjacencia[verticeAtual];
             while (vizinho !== null) {
                 const verticeVizinho = vizinho.verticeAdjacente;
                 const pesoAresta = vizinho.peso;
 
+                // Relaxamento: se encontrarmos um caminho mais curto, atualizamos a distância
                 if (!visitado[verticeVizinho] &&
-                    distancias[verticeAtual] !== this.INFINITO && // Check if verticeAtual is reachable
+                    distancias[verticeAtual] !== this.INFINITO &&
                     distancias[verticeAtual] + pesoAresta < distancias[verticeVizinho]) {
                     distancias[verticeVizinho] = distancias[verticeAtual] + pesoAresta;
                 }
@@ -220,6 +307,7 @@ class Grafo {
             }
         }
 
+        // Exibe os resultados
         console.log(`\nDistancias a partir do vertice ${verticeInicial} (usando Dijkstra):`);
         for (let i = 1; i < this.numVertices; i++) {
             if (distancias[i] === this.INFINITO)
@@ -229,13 +317,23 @@ class Grafo {
         }
     }
 
+    /**
+     * Implementação do algoritmo de Floyd-Warshall para encontrar todos os caminhos mais curtos.
+     * Funciona para qualquer grafo, incluindo aqueles com pesos negativos (desde que não haja ciclos negativos).
+     * 
+     * Complexidade: O(V³) onde V é o número de vértices
+     */
     algoritmoFloyd() {
+        // Inicializa a matriz de distâncias
         const dist = Array.from({ length: this.numVertices }, () =>
             new Array(this.numVertices).fill(this.INFINITO)
         );
 
+        // Preenche a matriz com as distâncias iniciais
         for (let i = 0; i < this.numVertices; i++) {
-            dist[i][i] = 0;
+            dist[i][i] = 0; // Distância de um vértice para ele mesmo é 0
+
+            // Adiciona as arestas diretas
             let atual = this.listaAdjacencia[i];
             while (atual !== null) {
                 dist[i][atual.verticeAdjacente] = atual.peso;
@@ -243,6 +341,8 @@ class Grafo {
             }
         }
 
+        // Algoritmo de Floyd-Warshall principal
+        // Para cada vértice k, verifica se passar por k melhora o caminho de i para j
         for (let k = 0; k < this.numVertices; k++) {
             for (let i = 0; i < this.numVertices; i++) {
                 for (let j = 0; j < this.numVertices; j++) {
@@ -254,6 +354,7 @@ class Grafo {
             }
         }
 
+        // Exibe a matriz de distâncias
         console.log("\nMatriz de distancias minimas (Floyd-Warshall):");
         for (let i = 0; i < this.numVertices; i++) {
             let linha = "";
@@ -267,12 +368,20 @@ class Grafo {
         }
     }
 
+    /**
+     * Implementação do algoritmo de Kruskal para encontrar a Árvore Geradora Mínima (MST).
+     * Usa a estrutura Union-Find para detectar ciclos.
+     * 
+     * Complexidade: O(E log E) onde E é o número de arestas, devido à ordenação
+     */
     algoritmoKruskal() {
         const todasArestas = [];
 
+        // Coleta todas as arestas do grafo
         for (let vertice = 0; vertice < this.numVertices; vertice++) {
             let corrente = this.listaAdjacencia[vertice];
             while (corrente !== null) {
+                // Para grafos não direcionados, adiciona cada aresta apenas uma vez
                 if (!this.direcionado && vertice < corrente.verticeAdjacente) {
                     todasArestas.push(new Aresta(vertice, corrente.verticeAdjacente, corrente.peso));
                 } else if (this.direcionado) {
@@ -282,21 +391,28 @@ class Grafo {
             }
         }
 
+        // Ordena as arestas por peso (crescente)
         todasArestas.sort((a, b) => a.peso - b.peso);
 
+        // Inicializa a estrutura Union-Find
         const conjuntosDisjuntos = new DisjointSet(this.numVertices);
         const arvoreGeradoraMinima = [];
         let custoTotal = 0;
 
+        // Processa as arestas em ordem crescente de peso
         for (const aresta of todasArestas) {
+            // Verifica se adicionar a aresta não forma ciclo
             if (conjuntosDisjuntos.encontrarRepresentante(aresta.verticeOrigem) !==
                 conjuntosDisjuntos.encontrarRepresentante(aresta.verticeDestino)) {
+                // Adiciona a aresta à MST
                 arvoreGeradoraMinima.push(aresta);
+                // Une os conjuntos
                 conjuntosDisjuntos.unirConjuntos(aresta.verticeOrigem, aresta.verticeDestino);
                 custoTotal += aresta.peso;
             }
         }
 
+        // Exibe os resultados
         console.log("\nArvore Geradora Minima (Kruskal):");
         console.log("Arestas na MST:");
         for (const aresta of arvoreGeradoraMinima) {
@@ -305,20 +421,29 @@ class Grafo {
         console.log(`Custo total da MST: ${custoTotal}`);
     }
 
+    /**
+     * Implementação do algoritmo de Prim para encontrar a Árvore Geradora Mínima (MST).
+     * Cresce a MST a partir de um vértice inicial, sempre adicionando a aresta de menor peso.
+     * 
+     * Complexidade: O(V²) nesta implementação simples
+     * Com fila de prioridade, seria O((V+E)logV)
+     */
     algoritmoPrim() {
         const chave = new Array(this.numVertices).fill(this.INFINITO);
         const naArvore = new Array(this.numVertices).fill(false);
         const pai = new Array(this.numVertices).fill(-1);
 
-
-        const verticeInicialPrim = 1; // Escolha um vértice inicial válido do seu grafo (ex: 1)
+        // Escolhe um vértice inicial
+        const verticeInicialPrim = 1;
         if (verticeInicialPrim < 0 || verticeInicialPrim >= this.numVertices) {
-        console.error("Vértice inicial inválido para Prim.");
-        return;
-    }
-    chave[verticeInicialPrim] = 0;
+            console.error("Vértice inicial inválido para Prim.");
+            return;
+        }
+        chave[verticeInicialPrim] = 0;
 
-        for (let i = 0; i < this.numVertices - 1; i++) { 
+        // Algoritmo principal de Prim
+        for (let i = 0; i < this.numVertices - 1; i++) {
+            // Encontra o vértice com valor mínimo de chave, não incluído na MST
             let u = -1;
             let menorChave = this.INFINITO;
             for (let v = 0; v < this.numVertices; v++) {
@@ -328,9 +453,10 @@ class Grafo {
                 }
             }
 
-            if (u === -1) break; 
+            if (u === -1) break; // Não há mais vértices conectáveis
             naArvore[u] = true;
 
+            // Atualiza os valores de chave e pai dos vértices adjacentes
             let adj = this.listaAdjacencia[u];
             while (adj !== null) {
                 const v = adj.verticeAdjacente;
@@ -343,46 +469,18 @@ class Grafo {
             }
         }
 
-        let custoTotal = 0;
+        // Calcula e exibe o resultado
         console.log("\nArvore Geradora Minima (Prim):");
         console.log("Arestas na MST:");
-        for (let i = 1; i < this.numVertices; i++) {
-            if (pai[i] !== -1) {
-                let pesoAresta = this.INFINITO;
-                let adj = this.listaAdjacencia[pai[i]];
-                while (adj !== null) {
-                    if (adj.verticeAdjacente === i) {
-                        pesoAresta = adj.peso;
-                        break;
-                    }
-                    adj = adj.proximo;
-                }
-                if (pesoAresta === this.INFINITO) {
-                    adj = this.listaAdjacencia[i];
-                    while (adj !== null) {
-                        if (adj.verticeAdjacente === pai[i]) {
-                            pesoAresta = adj.peso;
-                            break;
-                        }
-                        adj = adj.proximo;
-                    }
-                }
 
-
-                if (pai[i] !== -1 && pesoAresta !== this.INFINITO) {
-                    console.log(`${pai[i]} -- ${i} (peso: ${pesoAresta})`);
-                    custoTotal += pesoAresta;
-                } else if (pai[i] !== -1) { 
-                    console.log(`${pai[i]} -- ${i} (peso desconhecido, using key value: ${chave[i]})`);
-                    custoTotal += chave[i];
-                }
-            }
-        }
         let custoCalculadoPrim = 0;
         for (let i = 0; i < this.numVertices; i++) {
-            if (pai[i] !== -1) { 
+            if (pai[i] !== -1) {
+                // Encontra o peso real da aresta (pai[i] -> i)
                 let adj = this.listaAdjacencia[pai[i]];
                 let foundWeight = -1;
+
+                // Procura na lista de adjacência
                 while (adj) {
                     if (adj.verticeAdjacente === i) {
                         foundWeight = adj.peso;
@@ -390,9 +488,9 @@ class Grafo {
                     }
                     adj = adj.proximo;
                 }
-                if (foundWeight !== -1) {
-                    custoCalculadoPrim += foundWeight;
-                } else if (!this.direcionado) {
+
+                // Se não encontrou e o grafo é não direcionado, procura na outra direção
+                if (foundWeight === -1 && !this.direcionado) {
                     adj = this.listaAdjacencia[i];
                     while (adj) {
                         if (adj.verticeAdjacente === pai[i]) {
@@ -401,15 +499,25 @@ class Grafo {
                         }
                         adj = adj.proximo;
                     }
-                    if (foundWeight !== -1) {
-                        custoCalculadoPrim += foundWeight;
-                    }
+                }
+
+                // Exibe a aresta encontrada
+                if (foundWeight !== -1) {
+                    console.log(`${pai[i]} -- ${i} (peso: ${foundWeight})`);
+                    custoCalculadoPrim += foundWeight;
                 }
             }
         }
         console.log(`Custo total da MST: ${custoCalculadoPrim}`);
     }
 
+    /**
+     * Função auxiliar para DFS (Busca em Profundidade)
+     * Usada para verificar se o grafo está conectado.
+     * 
+     * @param {number} v - Vértice atual
+     * @param {Array<boolean>} visitado - Array de vértices visitados
+     */
     dfsUtil(v, visitado) {
         visitado[v] = true;
         let atual = this.listaAdjacencia[v];
@@ -421,13 +529,25 @@ class Grafo {
         }
     }
 
+    /**
+     * Verifica se o grafo está conectado usando DFS.
+     * Um grafo está conectado se existe um caminho entre cada par de vértices.
+     * 
+     * Complexidade: O(V + E)
+     * 
+     * @returns {boolean} true se o grafo está conectado, false caso contrário
+     */
     estaConectadoDFS() {
-        if (this.numVertices === 0) return true; 
+        if (this.numVertices === 0) return true;
         const visitado = new Array(this.numVertices).fill(false);
-        this.dfsUtil(0, visitado); 
 
+        // Começa a DFS a partir do vértice 0
+        this.dfsUtil(0, visitado);
+
+        // Verifica se todos os vértices foram visitados
         for (let i = 0; i < this.numVertices; i++) {
             if (!visitado[i]) {
+                // Verifica se é um vértice isolado
                 if (!this.listaAdjacencia[i] && this.numVertices > 1) {
                     let isIsolated = true;
                     for (let j = 0; j < this.numVertices; j++) {
@@ -437,7 +557,7 @@ class Grafo {
                             break;
                         }
                     }
-                    if (isIsolated) return false; 
+                    if (isIsolated) return false;
                 } else if (!visitado[i]) {
                     return false;
                 }
@@ -446,19 +566,24 @@ class Grafo {
         return true;
     }
 
-
-    
+    /**
+     * Implementação do algoritmo Apaga Reverso para encontrar a Árvore Geradora Mínima.
+     * Ao contrário de Kruskal e Prim que adicionam arestas, este algoritmo remove arestas
+     * em ordem decrescente de peso, desde que não desconecte o grafo.
+     * 
+     * Complexidade: O(E²) no pior caso, devido às verificações de conectividade
+     */
     algoritmoApagaReverso() {
         if (this.direcionado) {
             console.log("\nAlgoritmo Apaga Reverso eh tipicamente para grafos nao direcionados.");
-            // return; // Or proceed with caution
         }
 
+        // Coleta todas as arestas do grafo
         let arestas = [];
         for (let i = 0; i < this.numVertices; i++) {
             let atual = this.listaAdjacencia[i];
             while (atual !== null) {
-                // Only add once for undirected graphs
+                // Adiciona cada aresta apenas uma vez para grafos não direcionados
                 if (i < atual.verticeAdjacente || this.direcionado) {
                     arestas.push(new Aresta(i, atual.verticeAdjacente, atual.peso));
                 }
@@ -466,47 +591,49 @@ class Grafo {
             }
         }
 
-        // Sort edges by weight (descending)
+        // Ordena as arestas por peso (decrescente)
         arestas.sort((a, b) => b.peso - a.peso);
 
+        // Duplica as arestas para manter uma cópia de referência
         let mstEdges = [];
         for (let i = 0; i < this.numVertices; i++) {
             let atual = this.listaAdjacencia[i];
             while (atual !== null) {
-                if (i < atual.verticeAdjacente || this.direcionado) { // Avoid duplicates for undirected
+                if (i < atual.verticeAdjacente || this.direcionado) {
                     mstEdges.push(new Aresta(i, atual.verticeAdjacente, atual.peso));
                 }
                 atual = atual.proximo;
             }
         }
-        mstEdges.sort((a, b) => b.peso - a.peso); // Sort all current edges descending by weight
+        mstEdges.sort((a, b) => b.peso - a.peso); // Ordena por peso decrescente
 
-
-        // Iterate through sorted edges (heaviest first)
+        // Itera pelas arestas ordenadas (mais pesadas primeiro)
         for (let i = 0; i < arestas.length; i++) {
             const aresta = arestas[i];
 
-            // Temporarily remove the edge
-            const originalEdgeWasPresent = this.removeAresta(aresta.verticeOrigem, aresta.verticeDestino, true /* forApagaReverso */);
+            // Remove temporariamente a aresta
+            const originalEdgeWasPresent = this.removeAresta(aresta.verticeOrigem, aresta.verticeDestino, true);
 
             if (originalEdgeWasPresent) {
+                // Verifica se o grafo continua conectado após a remoção
                 if (!this.estaConectadoDFS()) {
-                    // If disconnected, the edge is essential: add it back
+                    // Se desconectado, a aresta é essencial: adiciona de volta
                     this.adicionaAresta(aresta.verticeOrigem, aresta.verticeDestino, aresta.peso);
-                } else {
-                    // If still connected, the edge was successfully removed from the MST candidate.
-                    // numArestas was already decremented by removeAresta
                 }
+                // Se ainda conectado, a aresta foi removida com sucesso da MST candidata
             }
         }
 
+        // Exibe o resultado
         console.log("\nResultado do algoritmo Apaga Reverso (MST):");
-        this.exibeGrafo(); // Display the graph which now represents the MST
+        this.exibeGrafo();
+
+        // Calcula o custo total
         let custoTotal = 0;
         for (let i = 0; i < this.numVertices; i++) {
             let temp = this.listaAdjacencia[i];
             while (temp != null) {
-                // For undirected, count each edge once by convention (e.g. when i < temp.verticeAdjacente)
+                // Para grafos não direcionados, conta cada aresta uma vez por convenção
                 if (!this.direcionado && i < temp.verticeAdjacente) {
                     custoTotal += temp.peso;
                 } else if (this.direcionado) {
@@ -518,13 +645,18 @@ class Grafo {
         console.log(`Custo total da MST (Apaga Reverso): ${custoTotal}`);
     }
 
-
+    /**
+     * Ordena e exibe as arestas do grafo por peso.
+     * 
+     * @param {boolean} crescente - true para ordenar em ordem crescente, false para decrescente
+     */
     ordenarArestas(crescente) {
+        // Coleta todas as arestas
         let arestas = [];
         for (let i = 0; i < this.numVertices; i++) {
             let atual = this.listaAdjacencia[i];
             while (atual !== null) {
-                // Avoid duplication in undirected graphs if this.direcionado is false
+                // Evita duplicação em grafos não direcionados
                 if (this.direcionado || i < atual.verticeAdjacente) {
                     arestas.push(new Aresta(i, atual.verticeAdjacente, atual.peso));
                 }
@@ -532,6 +664,7 @@ class Grafo {
             }
         }
 
+        // Ordena e exibe as arestas
         if (crescente) {
             arestas.sort((a, b) => a.peso - b.peso);
             console.log("\nArestas ordenadas por peso (crescente):");
@@ -545,27 +678,47 @@ class Grafo {
         }
     }
 
+    /**
+     * Método auxiliar para remover uma aresta da lista de adjacência.
+     * 
+     * @param {number} verticeOrigem - Vértice de origem
+     * @param {number} verticeDestino - Vértice de destino
+     * @returns {boolean} true se a aresta foi removida, false se não existia
+     */
     removeArestaAux(verticeOrigem, verticeDestino) {
         let anterior = null;
         let corrente = this.listaAdjacencia[verticeOrigem];
 
+        // Encontra a aresta na lista
         while (corrente !== null && corrente.verticeAdjacente < verticeDestino) {
             anterior = corrente;
             corrente = corrente.proximo;
         }
 
+        // Se encontrou a aresta, remove-a
         if (corrente !== null && corrente.verticeAdjacente === verticeDestino) {
             if (anterior !== null) {
                 anterior.proximo = corrente.proximo;
             } else {
                 this.listaAdjacencia[verticeOrigem] = corrente.proximo;
             }
-            // No manual memory deallocation like 'delete corrente' in JS
+            // Em JavaScript, o coletor de lixo cuida da desalocação de memória
             return true;
         }
-        return false; // Edge not found
+        return false; // Aresta não encontrada
     }
+
+    /**
+     * Remove uma aresta do grafo.
+     * Se o grafo não for direcionado, remove também a aresta reversa.
+     * 
+     * @param {number} verticeOrigem - Vértice de origem
+     * @param {number} verticeDestino - Vértice de destino
+     * @param {boolean} forApagaReverso - Flag para indicar se é chamado pelo algoritmo Apaga Reverso
+     * @returns {boolean} true se a aresta foi removida, false caso contrário
+     */
     removeAresta(verticeOrigem, verticeDestino, forApagaReverso = false) {
+        // Validação dos vértices
         if (verticeOrigem < 0 || verticeDestino < 0 ||
             verticeOrigem >= this.numVertices || verticeDestino >= this.numVertices ||
             verticeOrigem === verticeDestino) {
@@ -573,21 +726,24 @@ class Grafo {
             return false;
         }
 
+        // Remove a aresta
         let removed = this.removeArestaAux(verticeOrigem, verticeDestino);
         if (removed) {
+            // Para grafos não direcionados, remove também a aresta reversa
             if (!this.direcionado) {
                 this.removeArestaAux(verticeDestino, verticeOrigem);
             }
-           
-            if (!forApagaReverso || (forApagaReverso && this.arestaExiste(verticeOrigem, verticeDestino, true))) {
-                //The check above is a bit complex. Simpler: if primary removal happened, count it.
-            }
-          
-            this.numArestas--; // Decrement if the primary direction was removed
+
+            // Decrementa o contador de arestas
+            this.numArestas--;
             return true;
         }
         return false;
     }
+
+    /**
+     * Exibe a representação do grafo (lista de adjacência).
+     */
     exibeGrafo() {
         console.log("\n=== REPRESENTACAO DO GRAFO (LISTA DE ADJACENCIA) ===");
         for (let i = 1; i < this.numVertices; i++) {
@@ -603,14 +759,23 @@ class Grafo {
         }
     }
 
+    /**
+     * Verifica se existe uma aresta entre dois vértices.
+     * 
+     * @param {number} verticeOrigem - Vértice de origem
+     * @param {number} verticeDestino - Vértice de destino
+     * @param {boolean} suppressMessage - Se true, suprime mensagens de erro
+     * @returns {boolean} true se a aresta existe, false caso contrário
+     */
     arestaExiste(verticeOrigem, verticeDestino, suppressMessage = false) {
+        // Validação dos vértices
         if (verticeOrigem < 0 || verticeDestino < 0 ||
             verticeOrigem >= this.numVertices || verticeDestino >= this.numVertices) {
-            // Removed verticeOrigem === verticeDestino check as self-loops can exist
             if (!suppressMessage) console.log("Entrada invalida para arestaExiste");
             return false;
         }
 
+        // Procura a aresta na lista de adjacência
         let atual = this.listaAdjacencia[verticeOrigem];
         while (atual !== null && atual.verticeAdjacente < verticeDestino) {
             atual = atual.proximo;
@@ -618,18 +783,18 @@ class Grafo {
 
         return atual !== null && atual.verticeAdjacente === verticeDestino;
     }
-
-    // Destructor (~Grafo) is not needed in JavaScript due to automatic garbage collection.
 }
 
 /**
- * Creates an example graph based on the specified type.
- * Adds edges corresponding to the examples in the prompt.
+ * Cria um grafo de exemplo com base no tipo especificado.
+ * Adiciona arestas correspondentes aos exemplos no prompt.
+ * 
+ * @param {Grafo} g - O grafo a ser preenchido
+ * @param {boolean} grafoDirecionado - Se o grafo é direcionado
+ * @param {boolean} grafoPonderado - Se o grafo é ponderado
  */
 function criarGrafoExemplo(g, grafoDirecionado, grafoPonderado) {
-    // Limpa o grafo antes de adicionar novas arestas
-    // (isso não existe no código atual, seria necessário implementar)
-
+    // Adiciona arestas com base no tipo de grafo
     if (grafoDirecionado) {
         if (grafoPonderado) {
             // Grafo direcionado ponderado
@@ -649,6 +814,7 @@ function criarGrafoExemplo(g, grafoDirecionado, grafoPonderado) {
             g.adicionaAresta(1, 3, 1);
             g.adicionaAresta(3, 2, 5);
         } else {
+            // Grafo não direcionado não ponderado
             g.adicionaAresta(1, 2, 1);
             g.adicionaAresta(1, 3, 1);
             g.adicionaAresta(3, 2, 1);
@@ -656,10 +822,9 @@ function criarGrafoExemplo(g, grafoDirecionado, grafoPonderado) {
     }
 }
 
-
 /**
  * Função principal com menu interativo.
- * Implementa um menu semelhante ao do código C++ original.
+ * Implementa um menu para interagir com o grafo e executar os algoritmos.
  */
 async function main() {
     // Configuração para leitura interativa de entrada do usuário
@@ -669,7 +834,10 @@ async function main() {
         output: process.stdout
     });
 
+    // Função auxiliar para fazer perguntas ao usuário
     const askQuestion = (query) => new Promise(resolve => rl.question(query, resolve));
+
+    // Configuração inicial do grafo
     console.log("=== CONFIGURAÇÃO DO GRAFO ===");
     let resposta = await askQuestion("O grafo sera direcionado? (s/n): ");
     const grafoEhDirecionado = resposta.toLowerCase() === 's';
@@ -677,7 +845,7 @@ async function main() {
     resposta = await askQuestion("O grafo sera ponderado? (s/n): ");
     const grafoEhPonderado = resposta.toLowerCase() === 's';
 
-    // Cria um grafo com 5 vértices
+    // Cria um grafo com 4 vértices (0 a 3)
     const numVertices = 4;
     const grafo = new Grafo(numVertices, grafoEhDirecionado, grafoEhPonderado);
 
@@ -686,6 +854,7 @@ async function main() {
 
     let programaEncerrado = false;
 
+    // Loop principal do menu
     while (!programaEncerrado) {
         // Exibe o menu de opções
         console.log("\n=== MENU DE OPERACOES DO GRAFOS ===");
@@ -701,6 +870,7 @@ async function main() {
         console.log("10. Ordenacao de arestas por peso (crescente/decrescente)");
         console.log("11. Sair");
 
+        // Solicita a escolha do usuário
         const opcaoMenu = parseInt(await askQuestion("Escolha uma opcao: "));
 
         // Processa a opção escolhida
@@ -723,7 +893,7 @@ async function main() {
                 }
                 break;
 
-            case 3: // Menor caminho in directed, unweighted graphs (BFS)
+            case 3: // Menor caminho em grafos direcionados não ponderados (BFS)
                 if (grafoEhDirecionado && !grafoEhPonderado) {
                     console.log("\n=== MENOR CAMINHO DE GRAFOS DIRECIONADOS NAO PONDERADOS (utilizando BFS) ===");
                     const verticeInicial = parseInt(await askQuestion("Digite o vertice inicial: "));
@@ -733,7 +903,7 @@ async function main() {
                 }
                 break;
 
-            case 4: // Menor caminho in directed, weighted graphs (Dijkstra and Floyd)
+            case 4: // Menor caminho em grafos direcionados ponderados (Dijkstra e Floyd)
                 if (grafoEhDirecionado && grafoEhPonderado) {
                     console.log("\n=== MENOR CAMINHO DE GRAFOS DIRECIONADOS PONDERADOS ===");
                     console.log("Utilizando Dijkstra: ");
@@ -745,7 +915,7 @@ async function main() {
                 }
                 break;
 
-            case 5: // Menor caminho in undirected, unweighted graphs (BFS)
+            case 5: // Menor caminho em grafos não direcionados não ponderados (BFS)
                 if (!grafoEhDirecionado && !grafoEhPonderado) {
                     console.log("\n=== MENOR CAMINHO DE GRAFOS NAO DIRECIONADOS NAO PONDERADOS (utilizando BFS)===");
                     const verticeInicial = parseInt(await askQuestion("Digite o vertice inicial: "));
@@ -755,7 +925,7 @@ async function main() {
                 }
                 break;
 
-            case 6: // Menor caminho in undirected, weighted graphs (Dijkstra and Floyd)
+            case 6: // Menor caminho em grafos não direcionados ponderados (Dijkstra e Floyd)
                 if (!grafoEhDirecionado && grafoEhPonderado) {
                     console.log("\n=== MENOR CAMINHO DE GRAFOS NAO DIRECIONADOS PONDERADOS ===");
                     console.log("Utilizando Dijkstra: ");
@@ -767,7 +937,7 @@ async function main() {
                 }
                 break;
 
-            case 7: // Minimum Spanning Tree - Kruskal
+            case 7: // Árvore Geradora Mínima - Kruskal
                 if (!grafoEhDirecionado && grafoEhPonderado) {
                     console.log("\n=== ARVORE GERADORA MINIMA - KRUSKAL ===");
                     grafo.algoritmoKruskal();
@@ -776,7 +946,7 @@ async function main() {
                 }
                 break;
 
-            case 8: // Minimum Spanning Tree - Prim
+            case 8: // Árvore Geradora Mínima - Prim
                 if (!grafoEhDirecionado && grafoEhPonderado) {
                     console.log("\n=== ARVORE GERADORA MINIMA - PRIM ===");
                     grafo.algoritmoPrim();
@@ -785,7 +955,7 @@ async function main() {
                 }
                 break;
 
-            case 9: // Minimum Spanning Tree - Reverse Delete
+            case 9: // Árvore Geradora Mínima - Apaga Reverso
                 if (!grafoEhDirecionado && grafoEhPonderado) {
                     console.log("\n=== ARVORE GERADORA MINIMA - APAGA REVERSO ===");
                     grafo.algoritmoApagaReverso();
@@ -794,27 +964,31 @@ async function main() {
                 }
                 break;
 
-            case 10: // Sorting edges by weight
+            case 10: // Ordenação de arestas por peso
                 resposta = await askQuestion("Ordenar em ordem (c)rescente ou (d)ecrescente? ");
                 grafo.ordenarArestas(resposta.toLowerCase() === 'c');
                 break;
 
-            case 11: // Exit the program
+            case 11: // Encerra o programa
                 console.log("Encerrando programa...");
                 programaEncerrado = true;
                 break;
 
-            default: // Invalid option
+            default: // Opção inválida
                 console.log("Opção invalida! Tente novamente.");
                 break;
         }
     }
 
+    // Fecha a interface de leitura e encerra o programa
     rl.close();
     console.log("Programa encerrado.");
 }
 
-// Executa a função principal se estiver em Node.js
+/**
+ * Executa a função principal se estiver em ambiente Node.js
+ * Caso contrário, exibe uma mensagem informativa.
+ */
 if (typeof process !== 'undefined' && process.versions != null && process.versions.node != null) {
     main().catch(console.error);
 } else {
