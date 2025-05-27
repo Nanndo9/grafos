@@ -1,4 +1,3 @@
-
 class ElemLista {
     constructor(verticeAdjacente, peso) {
         this.verticeAdjacente = verticeAdjacente; // Vértice de destino da aresta
@@ -575,11 +574,15 @@ class Grafo {
      */
     algoritmoApagaReverso() {
         if (this.direcionado) {
-            console.log("\nAlgoritmo Apaga Reverso eh tipicamente para grafos nao direcionados.");
+            console.log("\nAlerta: Algoritmo Apaga Reverso eh tipicamente para grafos nao direcionados.");
+            // Você pode querer adicionar um 'return;' aqui se não quiser prosseguir
+            // ou garantir que a lógica subsequente lide corretamente com grafos direcionados,
+            // o que geralmente não é o caso para Apaga Reverso.
         }
 
-        // Coleta todas as arestas do grafo
         let arestas = [];
+
+        // Coleta todas as arestas do grafo
         for (let i = 0; i < this.numVertices; i++) {
             let atual = this.listaAdjacencia[i];
             while (atual !== null) {
@@ -746,9 +749,10 @@ class Grafo {
      */
     exibeGrafo() {
         console.log("\n=== REPRESENTACAO DO GRAFO (LISTA DE ADJACENCIA) ===");
-        for (let i = 1; i < this.numVertices; i++) {
+        console.log("Mapeamento: Vértice do Grafo 0 -> Exemplo 1, Grafo 1 -> Exemplo 2, Grafo 2 -> Exemplo 3");
+        for (let i = 0; i < this.numVertices; i++) { // Alterado para começar de 0
             let temp = this.listaAdjacencia[i];
-            let output = `Vertice ${i} -> `;
+            let output = `Vertice ${i} (Exemplo ${i + 1}) -> `;
             while (temp !== null) {
                 output += `(${temp.verticeAdjacente}, peso: ${temp.peso})`;
                 if (temp.proximo !== null)
@@ -788,36 +792,42 @@ class Grafo {
 /**
  * Cria um grafo de exemplo com base no tipo especificado.
  * Adiciona arestas correspondentes aos exemplos no prompt.
+ * Os vértices do exemplo 1, 2, 3 são mapeados para 0, 1, 2.
  * 
  * @param {Grafo} g - O grafo a ser preenchido
  * @param {boolean} grafoDirecionado - Se o grafo é direcionado
  * @param {boolean} grafoPonderado - Se o grafo é ponderado
  */
 function criarGrafoExemplo(g, grafoDirecionado, grafoPonderado) {
+    // Mapeamento: Exemplo Vértice 1 -> Grafo Vértice 0
+    //             Exemplo Vértice 2 -> Grafo Vértice 1
+    //             Exemplo Vértice 3 -> Grafo Vértice 2
+    const v1 = 0, v2 = 1, v3 = 2;
+
     // Adiciona arestas com base no tipo de grafo
     if (grafoDirecionado) {
         if (grafoPonderado) {
             // Grafo direcionado ponderado
-            g.adicionaArestaDirecionada(1, 2, 3);
-            g.adicionaArestaDirecionada(1, 3, 1);
-            g.adicionaArestaDirecionada(3, 2, 5);
+            g.adicionaArestaDirecionada(v1, v2, 3); // Ex: 1 -> 2, peso 3
+            g.adicionaArestaDirecionada(v1, v3, 1); // Ex: 1 -> 3, peso 1
+            g.adicionaArestaDirecionada(v3, v2, 5); // Ex: 3 -> 2, peso 5
         } else {
             // Grafo direcionado não ponderado
-            g.adicionaArestaDirecionada(1, 2, 1);
-            g.adicionaArestaDirecionada(1, 3, 1);
-            g.adicionaArestaDirecionada(3, 2, 1);
+            g.adicionaArestaDirecionada(v1, v2, 1);
+            g.adicionaArestaDirecionada(v1, v3, 1);
+            g.adicionaArestaDirecionada(v3, v2, 1);
         }
     } else { // Grafos não direcionados
         if (grafoPonderado) {
             // Grafo não direcionado ponderado
-            g.adicionaAresta(1, 2, 3);
-            g.adicionaAresta(1, 3, 1);
-            g.adicionaAresta(3, 2, 5);
+            g.adicionaAresta(v1, v2, 3); // Ex: 1 -- 2, peso 3
+            g.adicionaAresta(v1, v3, 1); // Ex: 1 -- 3, peso 1
+            g.adicionaAresta(v3, v2, 5); // Ex: 3 -- 2, peso 5
         } else {
             // Grafo não direcionado não ponderado
-            g.adicionaAresta(1, 2, 1);
-            g.adicionaAresta(1, 3, 1);
-            g.adicionaAresta(3, 2, 1);
+            g.adicionaAresta(v1, v2, 1);
+            g.adicionaAresta(v1, v3, 1);
+            g.adicionaAresta(v3, v2, 1);
         }
     }
 }
@@ -845,8 +855,8 @@ async function main() {
     resposta = await askQuestion("O grafo sera ponderado? (s/n): ");
     const grafoEhPonderado = resposta.toLowerCase() === 's';
 
-    // Cria um grafo com 4 vértices (0 a 3)
-    const numVertices = 4;
+    // Cria um grafo com 3 vértices (0 a 2) para representar os vértices 1, 2, 3 do exemplo
+    const numVertices = 3;
     const grafo = new Grafo(numVertices, grafoEhDirecionado, grafoEhPonderado);
 
     // Preenche o grafo com arestas de exemplo
@@ -857,7 +867,8 @@ async function main() {
     // Loop principal do menu
     while (!programaEncerrado) {
         // Exibe o menu de opções
-        console.log("\n=== MENU DE OPERACOES DO GRAFOS ===");
+        console.log("\n=== MENU DE OPERACOES DO GRAFOS (Vértices 0, 1, 2) ==="); // Ajuste aqui
+        console.log("Lembre-se: Vértice 1 do exemplo = 0, Vértice 2 = 1, Vértice 3 = 2");
         console.log("01. Lista de adjacencia de grafos nao direcionados");
         console.log("02. Lista de adjacencia de grafos direcionados");
         console.log("03. Menor caminho de grafos direcionados");
